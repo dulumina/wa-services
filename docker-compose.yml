@@ -1,2 +1,12 @@
-version: '3'
-services: {}
+version: "3"
+services:
+  wa-services:
+    build:
+      context: .
+      dockerfile: dockerfile
+    image: "fikridulumina/wa-services:tatest"
+    container_name: wa-services
+    volumes:
+      - "./:/app/"
+    ports:
+      - 8000:8000
