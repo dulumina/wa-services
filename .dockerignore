@@ -1,4 +1,5 @@
 node_modules
+npm-debug.log
 whatsapp-session*.json
 package-lock.json
 downloaded-media/
