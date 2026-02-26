@@ -21,6 +21,7 @@ RUN npm install
 # Add user so we don't need --no-sandbox.
 RUN addgroup -S pptruser && adduser -S -G pptruser pptruser \
   && mkdir -p /home/pptruser/Downloads /app \
+  && mkdir -p /app/.wwebjs_auth /app/.wwebjs_cache \
   && chown -R pptruser:pptruser /home/pptruser \
   && chown -R pptruser:pptruser /app
 

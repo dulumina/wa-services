@@ -4,7 +4,7 @@
   "description": "Whatsapp api by Ngekoding",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "rm -f .wwebjs_auth/session-*/Singleton* || true && node index.js",
     "start:dev": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -16,12 +16,18 @@
   "license": "MIT",
   "dependencies": {
     "axios": "^1.6.0",
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.3.1",
     "express": "^4.19.2",
     "express-fileupload": "^1.4.3",
     "express-validator": "^7.0.1",
     "http": "0.0.1-security",
+    "jsonwebtoken": "^9.0.3",
     "mime-types": "^2.1.35",
+    "pg": "^8.19.0",
+    "pg-hstore": "^2.3.4",
     "qrcode": "^1.5.3",
+    "sequelize": "^6.37.7",
     "socket.io": "^4.7.5",
     "whatsapp-web.js": "latest"
   },

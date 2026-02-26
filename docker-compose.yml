@@ -7,5 +7,35 @@ services:
     container_name: wa-services
     volumes:
       - "./:/app/"
+      - "wwebjs_auth:/app/.wwebjs_auth"
+      - "wwebjs_cache:/app/.wwebjs_cache"
     ports:
       - 8000:8000
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_USER=postgres
+      - DB_PASS=postgres
+      - DB_NAME=wa_services
+      - DB_DIALECT=postgres
+
+  db:
+    image: postgres:15-alpine
+    container_name: wa-services-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: wa_services
+    # ports:
+    #   - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+  wwebjs_auth:
+  wwebjs_cache:
+
+
