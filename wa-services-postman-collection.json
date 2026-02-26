@@ -1,0 +1,81 @@
+{
+  "info": {
+    "name": "WhatsApp Service API",
+    "description": "Collection for WhatsApp Service API - Send messages via WhatsApp web",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "sender",
+      "value": "your-session-id",
+      "type": "string"
+    },
+    {
+      "key": "phoneNumber",
+      "value": "081234567890",
+      "type": "string"
+    },
+    {
+      "key": "message",
+      "value": "Hello from Postman!",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Send Message",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/api/send-message",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "send-message"
+          ]
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"sender\": \"{{sender}}\",\n    \"number\": \"{{phoneNumber}}\",\n    \"message\": \"{{message}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "description": "Send a WhatsApp message to a specific number"
+      },
+      "response": []
+    },
+    {
+      "name": "Get Web Page",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            ""
+          ]
+        },
+        "description": "Get the main web page for WhatsApp service"
+      },
+      "response": []
+    }
+  ]
+}

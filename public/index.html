@@ -1,76 +1,89 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 	<title>Whatsapp API by Ngekoding</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- This parts is optional, just for improve the styles -->
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<!-- This parts is optional, just for improve the styles -->
+	<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
 	<style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      font-family: 'Montserrat', sans-serif;
-      padding: 20px;
-    }
-    .form-container {
-      margin: 15px 0;
-      max-width: 500px;
-    }
-    .form-container input,
-    .form-container textarea {
-      width: 100%;
-      border: 1px solid #ccc;
-      border-radius: 2px;
-      padding: 5px 8px;
-      font-family: inherit;
-    }
-    .add-client-btn {
-      padding: 6px 15px;
-      margin-top: 10px;
-      background: green;
-      color: white;
-      border: 1px solid rgb(0, 93, 0);
-      border-radius: 2px;
-    }
-    .client-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      grid-gap: 15px;
-      margin-top: 30px;
-    }
-    .client {
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      padding: 15px;
-    }
-    #qrcode {
-      display: none; /* Showed when qr code received */
-      width: 100%;
-      margin: 10px 0;
-      border: 1px solid #efefef;
-      border-radius: 4px;
-    }
-    ul.logs {
-      max-height: 150px;
-      padding: 15px 15px 15px 30px;
-      margin-top: 5px;
-      border-radius: 4px;
-      overflow-y: auto;
-      background: #efefef;
-      color: #666;
-      font-size: 14px;
-    }
-    ul.logs li:first-child {
-      color: green;
-    }
-    .hide {
-      display: none;
-    }
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+
+		body {
+			font-family: 'Montserrat', sans-serif;
+			padding: 20px;
+		}
+
+		.form-container {
+			margin: 15px 0;
+			max-width: 500px;
+		}
+
+		.form-container input,
+		.form-container textarea {
+			width: 100%;
+			border: 1px solid #ccc;
+			border-radius: 2px;
+			padding: 5px 8px;
+			font-family: inherit;
+		}
+
+		.add-client-btn {
+			padding: 6px 15px;
+			margin-top: 10px;
+			background: green;
+			color: white;
+			border: 1px solid rgb(0, 93, 0);
+			border-radius: 2px;
+		}
+
+		.client-container {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+			grid-gap: 15px;
+			margin-top: 30px;
+		}
+
+		.client {
+			border: 1px solid #ccc;
+			border-radius: 4px;
+			padding: 15px;
+		}
+
+		#qrcode {
+			display: none;
+			/* Showed when qr code received */
+			width: 100%;
+			margin: 10px 0;
+			border: 1px solid #efefef;
+			border-radius: 4px;
+		}
+
+		ul.logs {
+			max-height: 150px;
+			padding: 15px 15px 15px 30px;
+			margin-top: 5px;
+			border-radius: 4px;
+			overflow-y: auto;
+			background: #efefef;
+			color: #666;
+			font-size: 14px;
+		}
+
+		ul.logs li:first-child {
+			color: green;
+		}
+
+		.hide {
+			display: none;
+		}
 	</style>
 </head>
+
 <body>
 
 	<div id="app">
@@ -99,26 +112,26 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.js"></script>
 	<script>
-		$(document).ready(function() {
+		$(document).ready(function () {
 			var socket = io();
 
 			// Ketika button tambah diklik
-			$('.add-client-btn').click(function() {
+			$('.add-client-btn').click(function () {
 				var clientId = $('#client-id').val();
 				var clientDescription = $('#client-description').val();
 
-        /**
-         * Some peoples want to use the phone number as the ID
-         * But because we use the ID as the html class attribute value: class="<The ID>"
-         * It won't work. Read more on https://www.w3.org/TR/REC-html40/types.html#type-cdata
-         * 
-         * So, here we add the prefix to solve that problem
-         * Each ID will automatically added a 'client-' prefix for the class attribute
-         */
-        var clientClass = 'client-' + clientId;
+				/**
+				 * Some peoples want to use the phone number as the ID
+				 * But because we use the ID as the html class attribute value: class="<The ID>"
+				 * It won't work. Read more on https://www.w3.org/TR/REC-html40/types.html#type-cdata
+				 * 
+				 * So, here we add the prefix to solve that problem
+				 * Each ID will automatically added a 'client-' prefix for the class attribute
+				 */
+				var clientClass = 'client-' + clientId;
 				var template = $('.client').first().clone()
-										   .removeClass('hide')
-										   .addClass(clientClass);
+					.removeClass('hide')
+					.addClass(clientClass);
 
 				template.find('.title').html(clientId);
 				template.find('.description').html(clientDescription);
@@ -131,7 +144,8 @@
 				});
 			});
 
-			socket.on('init', function(data) {
+			socket.on('init', function (data) {
+				console.log('init');
 				$('.client-container .client').not(':first').remove();
 				console.log(data);
 				for (var i = 0; i < data.length; i++) {
@@ -140,10 +154,10 @@
 					var clientId = session.id;
 					var clientDescription = session.description;
 
-          var clientClass = 'client-' + clientId;
+					var clientClass = 'client-' + clientId;
 					var template = $('.client').first().clone()
-											   .removeClass('hide')
-											   .addClass(clientClass);
+						.removeClass('hide')
+						.addClass(clientClass);
 
 					template.find('.title').html(clientId);
 					template.find('.description').html(clientDescription);
@@ -157,27 +171,33 @@
 				}
 			});
 
-			socket.on('remove-session', function(id) {
+			socket.on('remove-session', function (id) {
+				console.log('remove-session');
 				$(`.client.client-${id}`).remove();
 			});
 
-			socket.on('message', function(data) {
+			socket.on('message', function (data) {
+				console.log('message');
 				$(`.client.client-${data.id} .logs`).prepend($('<li>').text(data.text));
 			});
 
-			socket.on('qr', function(data) {
+			socket.on('qr', function (data) {
+				console.log('qr');
 				$(`.client.client-${data.id} #qrcode`).attr('src', data.src);
 				$(`.client.client-${data.id} #qrcode`).show();
 			});
 
-			socket.on('ready', function(data) {
+			socket.on('ready', function (data) {
+				console.log('ready');
 				$(`.client.client-${data.id} #qrcode`).hide();
 			});
 
-			socket.on('authenticated', function(data) {
+			socket.on('authenticated', function (data) {
+				console.log('authenticated');
 				$(`.client.client-${data.id} #qrcode`).hide();
 			});
 		});
 	</script>
 </body>
+
 </html>

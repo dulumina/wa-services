@@ -5,7 +5,7 @@ const path = require("path");
 
 
 const sessions = [];
-const SESSIONS_FILE = "./whatsapp-sessions.json";
+const SESSIONS_FILE = "./whatsapp-device/whatsapp-sessions.json";
 
 const createSessionsFileIfNotExists = function () {
   if (!fs.existsSync(SESSIONS_FILE)) {

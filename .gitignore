@@ -4,3 +4,7 @@ package-lock.json
 downloaded-media/
 .wwebjs_auth
 ./sess/*
+.env
+.wwebjs_cache/*
+whatsapp-device
+.dev

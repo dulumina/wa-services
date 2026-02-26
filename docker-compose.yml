@@ -3,10 +3,11 @@ services:
     build:
       context: .
       dockerfile: dockerfile
-    image: "fikridulumina/wa-services:tatest"
+    image: "fikridulumina/wa-services:latest"
     container_name: wa-services
     volumes:
-      - "./:/app/"
+      # - "./:/app/"
+      - "whatsapp-device:/app/whatsapp-device"
       - "wwebjs_auth:/app/.wwebjs_auth"
       - "wwebjs_cache:/app/.wwebjs_cache"
     ports:
@@ -37,5 +38,4 @@ volumes:
   postgres_data:
   wwebjs_auth:
   wwebjs_cache:
-
-
+  whatsapp-device:
