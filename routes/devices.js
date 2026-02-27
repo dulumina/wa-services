@@ -8,14 +8,14 @@ const { authenticate } = require("../middleware/auth");
 router.use(authenticate);
 
 // Get all devices
-router.get("/devices", deviceController.getDevices);
+router.get("/", deviceController.getDevices);
 
 // Get single device
-router.get("/devices/:id", deviceController.getDevice);
+router.get("/:id", deviceController.getDevice);
 
 // Create new device
 router.post(
-  "/devices",
+  "/",
   body("id").notEmpty().withMessage("Device ID is required"),
   body("description").optional().isString(),
   deviceController.createDevice,
@@ -23,18 +23,18 @@ router.post(
 
 // Update device
 router.put(
-  "/devices/:id",
+  "/:id",
   body("description").optional().isString(),
   deviceController.updateDevice,
 );
 
 // Delete device
-router.delete("/devices/:id", deviceController.deleteDevice);
+router.delete("/:id", deviceController.deleteDevice);
 
 // Logout device
-router.post("/devices/:id/logout", deviceController.logoutDevice);
+router.post("/:id/logout", deviceController.logoutDevice);
 
 // Get device QR code
-router.get("/devices/:id/qr", deviceController.getDeviceQr);
+router.get("/:id/qr", deviceController.getDeviceQr);
 
 module.exports = router;

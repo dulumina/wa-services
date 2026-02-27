@@ -19,12 +19,12 @@ const loginValidation = [
 ];
 
 // Public routes
-router.post("/auth/register", registerValidation, authController.register);
-router.post("/auth/login", loginValidation, authController.login);
-router.post("/auth/refresh-token", authController.refreshToken);
+router.post("/register", registerValidation, authController.register);
+router.post("/login", loginValidation, authController.login);
+router.post("/refresh-token", authController.refreshToken);
 
 // Protected routes
-router.get("/auth/profile", authenticate, authController.getProfile);
-router.put("/auth/profile", authenticate, authController.updateProfile);
+router.get("/profile", authenticate, authController.getProfile);
+router.put("/profile", authenticate, authController.updateProfile);
 
 module.exports = router;

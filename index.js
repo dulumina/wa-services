@@ -1,5 +1,14 @@
 require("dotenv").config();
+
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled Rejection at:", promise, "reason:", reason);
+});
+
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught Exception:", err);
+});
 const express = require("express");
+const cors = require("cors");
 const socketIO = require("socket.io");
 const http = require("http");
 const fileUpload = require("express-fileupload");
@@ -38,6 +47,7 @@ const io = socketIO(server, {
   },
 });
 
+app.use(cors());
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 
 app.use(express.json());
@@ -57,11 +67,15 @@ const startApp = async () => {
     console.log("✅ Database synchronized!");
 
     // Initialize Whatsapp Sessions
-    whatsappService.init(null, io);
+    try {
+      whatsappService.init(null, io);
+    } catch (err) {
+      console.error("Error during initial sessions load:", err);
+    }
 
     // Start server
-    server.listen(port, function () {
-      console.log("App running on *: " + port);
+    server.listen(port, "0.0.0.0", function () {
+      console.log("App running on http://0.0.0.0:" + port);
     });
   } catch (error) {
     console.error("Failed to start app:", error);

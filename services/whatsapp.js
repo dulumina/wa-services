@@ -5,6 +5,7 @@ const path = require("path");
 const { Device, MessageLog, Webhook } = require("../models");
 
 const sessions = [];
+const qrs = {}; // Store the latest QR for each session
 const SESSIONS_FILE = "./whatsapp-device/whatsapp-sessions.json";
 
 const createSessionsFileIfNotExists = function () {
@@ -86,11 +87,18 @@ const createSession = async function (id, description, io) {
     }),
   });
 
-  client.initialize();
+  try {
+    client.initialize().catch(err => {
+      console.error(`Error initializing client for ${id}:`, err.message);
+    });
+  } catch (err) {
+    console.error(`Failed to start client for ${id}:`, err);
+  }
 
   client.on("qr", (qr) => {
     console.log("QR RECEIVED", qr);
     qrcode.toDataURL(qr, (err, url) => {
+      qrs[id] = url; // Store QR
       io.emit("qr", { id: id, src: url });
       io.emit("message", { id: id, text: "QR Code received, scan please!" });
     });
@@ -102,6 +110,7 @@ const createSession = async function (id, description, io) {
   });
 
   client.on("ready", async () => {
+    delete qrs[id]; // Clear QR on success
     io.emit("ready", { id: id });
     io.emit("message", { id: id, text: "Whatsapp is ready!" });
 
@@ -137,6 +146,7 @@ const createSession = async function (id, description, io) {
   });
 
   client.on("disconnected", async (reason) => {
+    delete qrs[id]; // Clear QR on disconnect
     io.emit("message", { id: id, text: "Whatsapp is disconnected!" });
     client.destroy();
     client.initialize();
@@ -225,6 +235,13 @@ const init = async function (socket, io) {
           ready: d.ready,
         }));
         socket.emit("init", sessionData);
+
+        // Send pending QRs if any
+        dbDevices.forEach(d => {
+          if (qrs[d.id]) {
+            socket.emit("qr", { id: d.id, src: qrs[d.id] });
+          }
+        });
       } else {
         dbDevices.forEach((sess) => {
           createSession(sess.id, sess.description, io);
