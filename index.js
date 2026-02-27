@@ -73,12 +73,20 @@ const startApp = async () => {
       console.error("Error during initial sessions load:", err);
     }
 
+    // Health check
+    app.get("/health", (req, res) => {
+      res.json({ status: "ok", time: new Date() });
+    });
+
     // Start server
-    server.listen(port, "0.0.0.0", function () {
-      console.log("App running on http://0.0.0.0:" + port);
+    server.listen(port, function () {
+      const addr = server.address();
+      const bind = typeof addr === "string" ? "pipe " + addr : "port " + addr.port;
+      console.log("✅ Server is listening on " + bind);
+      console.log("✅ Local access: http://localhost:" + port);
     });
   } catch (error) {
-    console.error("Failed to start app:", error);
+    console.error("❌ Failed to start app:", error);
     process.exit(1);
   }
 };
