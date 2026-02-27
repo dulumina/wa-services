@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Globe, CheckCircle2, XCircle } from "lucide-react";
+import { Plus, Trash2, Globe, CheckCircle2, XCircle, RefreshCcw, Send } from "lucide-react";
 
 type Webhook = {
   id: string;
@@ -15,33 +15,103 @@ export default function WebhooksPage() {
   const [webhooks, setWebhooks] = useState<Webhook[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [newWebhook, setNewWebhook] = useState({ url: "", event: "message" });
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Mock initial data
-    setWebhooks([
-      { id: "1", url: "https://api.myapp.com/webhooks/wa", event: "message", isActive: true, createdAt: "2024-02-20" },
-      { id: "2", url: "https://crm.company.com/wa-events", event: "status", isActive: true, createdAt: "2024-02-22" }
-    ]);
-  }, []);
+  const fetchWebhooks = async () => {
+    try {
+      const token = localStorage.getItem("wa_token");
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-  const handleAddWebhook = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newWebhook.url) {
-      const created: Webhook = {
-        id: Math.random().toString(36).substring(7),
-        url: newWebhook.url,
-        event: newWebhook.event,
-        isActive: true,
-        createdAt: new Date().toISOString().split('T')[0]
-      };
-      setWebhooks([created, ...webhooks]);
-      setNewWebhook({ url: "", event: "message" });
-      setIsAdding(false);
+      const response = await fetch(`${apiUrl}/api/webhooks`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setWebhooks(result.data.map((w: any) => ({
+          ...w,
+          createdAt: new Date(w.createdAt).toISOString().split('T')[0]
+        })));
+      }
+    } catch (err) {
+      console.error("Failed to fetch webhooks:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const removeWebhook = (id: string) => {
-    setWebhooks(webhooks.filter(w => w.id !== id));
+  useEffect(() => {
+    fetchWebhooks();
+  }, []);
+
+  const handleAddWebhook = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newWebhook.url) {
+      try {
+        const token = localStorage.getItem("wa_token");
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+        const response = await fetch(`${apiUrl}/api/webhooks`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(newWebhook)
+        });
+
+        if (response.ok) {
+          await fetchWebhooks();
+          setNewWebhook({ url: "", event: "message" });
+          setIsAdding(false);
+        }
+      } catch (err) {
+        console.error("Failed to add webhook:", err);
+      }
+    }
+  };
+
+  const removeWebhook = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this webhook?")) return;
+
+    try {
+      const token = localStorage.getItem("wa_token");
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+      const response = await fetch(`${apiUrl}/api/webhooks/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        setWebhooks(webhooks.filter(w => w.id !== id));
+      }
+    } catch (err) {
+      console.error("Failed to delete webhook:", err);
+    }
+  };
+
+  const testWebhook = async (id: string) => {
+    try {
+      const token = localStorage.getItem("wa_token");
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+      const response = await fetch(`${apiUrl}/api/webhooks/${id}/test`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+      alert(data.message || (response.ok ? "Test sent!" : "Failed to test"));
+    } catch (err) {
+      console.error("Failed to test webhook:", err);
+    }
   };
 
   return (
@@ -94,41 +164,51 @@ export default function WebhooksPage() {
       )}
 
       <div className="grid-cards" style={{ gridTemplateColumns: '1fr', marginTop: 0 }}>
-        {webhooks.map((webhook) => (
-          <div key={webhook.id} className="card glass-panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <div style={{ padding: '0.75rem', background: 'var(--info-bg)', borderRadius: 'var(--radius-md)', color: 'var(--info)' }}>
-                <Globe size={24} />
-              </div>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <h3 className="card-title" style={{ marginBottom: 0 }}>{webhook.url}</h3>
-                  <span className="badge badge-info">{webhook.event}</span>
+        {loading ? (
+          <div className="text-center" style={{ padding: '3rem' }}>
+            <RefreshCcw size={32} className="animate-spin text-accent" style={{ margin: '0 auto' }} />
+          </div>
+        ) : (
+          <>
+            {webhooks.map((webhook) => (
+              <div key={webhook.id} className="card glass-panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{ padding: '0.75rem', background: 'var(--info-bg)', borderRadius: 'var(--radius-md)', color: 'var(--info)' }}>
+                    <Globe size={24} />
+                  </div>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <h3 className="card-title" style={{ marginBottom: 0 }}>{webhook.url}</h3>
+                      <span className="badge badge-info">{webhook.event}</span>
+                    </div>
+                    <div className="text-secondary" style={{ fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                      Created on {webhook.createdAt}
+                    </div>
+                  </div>
                 </div>
-                <div className="text-secondary" style={{ fontSize: '0.875rem', marginTop: '0.25rem' }}>
-                  Created on {webhook.createdAt}
-                </div>
-              </div>
-            </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: webhook.isActive ? 'var(--success)' : 'var(--text-muted)' }}>
-                {webhook.isActive ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
-                <span style={{ fontWeight: 500 }}>{webhook.isActive ? 'Active' : 'Inactive'}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: webhook.isActive ? 'var(--success)' : 'var(--text-muted)' }}>
+                    {webhook.isActive ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
+                    <span style={{ fontWeight: 500 }}>{webhook.isActive ? 'Active' : 'Inactive'}</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button className="btn btn-secondary btn-sm" onClick={() => testWebhook(webhook.id)}>
+                      <Send size={16} /> Test
+                    </button>
+                    <button className="btn btn-danger btn-sm" onClick={() => removeWebhook(webhook.id)}>
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button className="btn btn-secondary btn-sm">Test</button>
-                <button className="btn btn-danger btn-sm" onClick={() => removeWebhook(webhook.id)}>
-                  <Trash2 size={16} />
-                </button>
+            ))}
+            {webhooks.length === 0 && (
+              <div className="text-muted text-center" style={{ padding: '3rem' }}>
+                No webhooks configured.
               </div>
-            </div>
-          </div>
-        ))}
-        {webhooks.length === 0 && (
-          <div className="text-muted text-center" style={{ padding: '3rem' }}>
-            No webhooks configured.
-          </div>
+            )}
+          </>
         )}
       </div>
     </div>

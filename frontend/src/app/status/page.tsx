@@ -17,7 +17,29 @@ export default function StatusPage() {
   const [deviceStatuses, setDeviceStatuses] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    // Connect to the WA Services backend
+    // 1. Initial Fetch
+    const fetchInitialStatuses = async () => {
+      try {
+        const token = localStorage.getItem("wa_token");
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+        const response = await fetch(`${apiUrl}/api/devices`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const result = await response.json();
+          const statuses: Record<string, string> = {};
+          result.data.forEach((d: any) => {
+            statuses[d.id] = d.ready ? "CONNECTED" : "DISCONNECTED";
+          });
+          setDeviceStatuses(statuses);
+        }
+      } catch (err) {
+        console.error("Failed to fetch initial statuses:", err);
+      }
+    };
+    fetchInitialStatuses();
+
+    // 2. Socket Connection
     const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:8000";
     const socket = io(socketUrl);
 

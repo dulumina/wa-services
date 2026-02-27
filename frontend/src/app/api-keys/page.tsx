@@ -17,39 +17,111 @@ export default function ApiKeysPage() {
   const [newKey, setNewKey] = useState({ label: "" });
   const [loading, setLoading] = useState(true);
 
-  // In a real app, we would fetch from API
-  useEffect(() => {
-    // Mock initial data
-    setKeys([
-      { id: "1", label: "Production App", key: "sk_live_...a8f9", isActive: true, createdAt: "2024-02-25" },
-      { id: "2", label: "Staging Web", key: "sk_test_...j2k4", isActive: true, createdAt: "2024-02-26" }
-    ]);
-    setLoading(false);
-  }, []);
+  const fetchKeys = async () => {
+    try {
+      const token = localStorage.getItem("wa_token");
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-  const handleAddKey = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newKey.label) {
-      const createdKey: ApiKey = {
-        id: Math.random().toString(36).substring(7),
-        label: newKey.label,
-        key: "sk_live_" + Math.random().toString(36).substring(2, 24),
-        isActive: true,
-        createdAt: new Date().toISOString().split('T')[0]
-      };
-      setKeys([createdKey, ...keys]);
-      setNewKey({ label: "" });
-      setIsAdding(false);
+      const response = await fetch(`${apiUrl}/api/api-keys`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setKeys(result.data.map((k: any) => ({
+          ...k,
+          createdAt: new Date(k.createdAt).toISOString().split('T')[0]
+        })));
+      }
+    } catch (err) {
+      console.error("Failed to fetch API keys:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const removeKey = (id: string) => {
-    setKeys(keys.filter(k => k.id !== id));
+  useEffect(() => {
+    fetchKeys();
+  }, []);
+
+  const handleAddKey = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newKey.label) {
+      try {
+        const token = localStorage.getItem("wa_token");
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+        const response = await fetch(`${apiUrl}/api/api-keys`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(newKey)
+        });
+
+        if (response.ok) {
+          await fetchKeys();
+          setNewKey({ label: "" });
+          setIsAdding(false);
+        }
+      } catch (err) {
+        console.error("Failed to create API key:", err);
+      }
+    }
+  };
+
+  const removeKey = async (id: string) => {
+    if (!confirm("Are you sure you want to revoke this API key?")) return;
+
+    try {
+      const token = localStorage.getItem("wa_token");
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+      const response = await fetch(`${apiUrl}/api/api-keys/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        setKeys(keys.filter(k => k.id !== id));
+      } else {
+        const data = await response.json();
+        alert(data.message || "Failed to delete API key");
+      }
+    } catch (err) {
+      console.error("Failed to delete API key:", err);
+    }
+  };
+
+  const regenerateKey = async (id: string) => {
+    if (!confirm("Regenerating will invalidate the current key. Continue?")) return;
+
+    try {
+      const token = localStorage.getItem("wa_token");
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+      const response = await fetch(`${apiUrl}/api/api-keys/${id}/regenerate`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        await fetchKeys();
+      }
+    } catch (err) {
+      console.error("Failed to regenerate API key:", err);
+    }
   };
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    // Could add a toast here
   };
 
   return (
@@ -101,51 +173,61 @@ export default function ApiKeysPage() {
               </tr>
             </thead>
             <tbody>
-              {keys.map((key) => (
-                <tr key={key.id}>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <Key size={18} className="text-secondary" />
-                      <strong>{key.label}</strong>
-                    </div>
-                  </td>
-                  <td>
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-primary)', padding: '0.25rem 0.5rem', borderRadius: 'var(--radius-md)', fontFamily: 'monospace' }}>
-                      {key.key}
-                      <button
-                        onClick={() => key.key && copyToClipboard(key.key)}
-                        className="text-secondary hover:text-accent"
-                        style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
-                        title="Copy to clipboard"
-                      >
-                        <Copy size={14} />
-                      </button>
-                    </div>
-                  </td>
-                  <td className="text-secondary">{key.createdAt}</td>
-                  <td>
-                    <span className={`badge ${key.isActive ? 'badge-success' : 'badge-danger'}`}>
-                      {key.isActive ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button className="btn btn-secondary btn-sm" title="Regenerate">
-                        <RefreshCcw size={14} />
-                      </button>
-                      <button className="btn btn-danger btn-sm" onClick={() => removeKey(key.id)}>
-                        Revoke
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {keys.length === 0 && !loading && (
+              {loading ? (
                 <tr>
-                  <td colSpan={5} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                    No API keys found. Generate one to get started.
+                  <td colSpan={5} className="text-center" style={{ padding: '3rem' }}>
+                    <RefreshCcw size={24} className="animate-spin text-accent" style={{ margin: '0 auto' }} />
                   </td>
                 </tr>
+              ) : (
+                <>
+                  {keys.map((key) => (
+                    <tr key={key.id}>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <Key size={18} className="text-secondary" />
+                          <strong>{key.label}</strong>
+                        </div>
+                      </td>
+                      <td>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-primary)', padding: '0.25rem 0.5rem', borderRadius: 'var(--radius-md)', fontFamily: 'monospace' }}>
+                          {key.key}
+                          <button
+                            onClick={() => key.key && copyToClipboard(key.key)}
+                            className="text-secondary hover:text-accent"
+                            style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
+                            title="Copy to clipboard"
+                          >
+                            <Copy size={14} />
+                          </button>
+                        </div>
+                      </td>
+                      <td className="text-secondary">{key.createdAt}</td>
+                      <td>
+                        <span className={`badge ${key.isActive ? 'badge-success' : 'badge-danger'}`}>
+                          {key.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <button className="btn btn-secondary btn-sm" onClick={() => regenerateKey(key.id)} title="Regenerate">
+                            <RefreshCcw size={14} />
+                          </button>
+                          <button className="btn btn-danger btn-sm" onClick={() => removeKey(key.id)}>
+                            Revoke
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {keys.length === 0 && (
+                    <tr>
+                      <td colSpan={5} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                        No API keys found. Generate one to get started.
+                      </td>
+                    </tr>
+                  )}
+                </>
               )}
             </tbody>
           </table>

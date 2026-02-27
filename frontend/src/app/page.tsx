@@ -1,12 +1,80 @@
-import { Activity, Smartphone, Key, AlertCircle } from "lucide-react";
+"use client";
+
+import { useState, useEffect } from "react";
+import { Activity, Smartphone, Key, AlertCircle, RefreshCcw } from "lucide-react";
+
+type Stat = {
+  label: string;
+  value: string | number;
+  icon: any;
+  type: "success" | "info" | "warning" | "danger";
+};
+
+type ActivityLog = {
+  id: string;
+  event: string;
+  device: string;
+  status: string;
+  time: string;
+};
 
 export default function Home() {
-  const stats = [
-    { label: "Active Devices", value: "3", icon: Smartphone, type: "success" as const },
-    { label: "API Keys", value: "5", icon: Key, type: "info" as const },
-    { label: "Messages Sent (Today)", value: "1,248", icon: Activity, type: "info" as const },
-    { label: "Failed Items", value: "12", icon: AlertCircle, type: "warning" as const }
-  ];
+  const [stats, setStats] = useState<Stat[]>([]);
+  const [recentActivity, setRecentActivity] = useState<ActivityLog[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchDashboardData = async () => {
+    try {
+      const token = localStorage.getItem("wa_token");
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+      const response = await fetch(`${apiUrl}/api/dashboard/stats`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        const { stats: s, recentActivity: ra } = result.data;
+
+        setStats([
+          { label: "Active Devices", value: s.activeDevices, icon: Smartphone, type: "success" },
+          { label: "API Keys", value: s.apiKeys, icon: Key, type: "info" },
+          { label: "Messages Sent (Today)", value: s.messagesSentToday.toLocaleString(), icon: Activity, type: "info" },
+          { label: "Failed Items (Today)", value: s.failedItems, icon: AlertCircle, type: "warning" }
+        ]);
+        setRecentActivity(ra);
+      }
+    } catch (err) {
+      console.error("Dashboard fetch error:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const formatRelativeTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diff < 60) return "Just now";
+    if (diff < 3600) return `${Math.floor(diff / 60)} mins ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
+    return date.toLocaleDateString();
+  };
+
+  if (isLoading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', padding: '5rem' }}>
+        <RefreshCcw size={40} className="animate-spin text-accent" />
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in">
@@ -38,7 +106,7 @@ export default function Home() {
         <div className="card glass-panel" style={{ gridColumn: 'span 2' }}>
           <div className="card-header">
             <h3 className="card-title">Recent Activity</h3>
-            <button className="btn btn-secondary btn-sm">View All</button>
+            <button className="btn btn-secondary btn-sm" onClick={fetchDashboardData}>Refresh</button>
           </div>
           <div className="table-container">
             <table className="table">
@@ -51,30 +119,25 @@ export default function Home() {
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>Message Sent</td>
-                  <td>Main-Marketing</td>
-                  <td><span className="badge badge-success">Success</span></td>
-                  <td className="text-secondary">2 mins ago</td>
-                </tr>
-                <tr>
-                  <td>Webhook Triggered</td>
-                  <td>Support-Bot</td>
-                  <td><span className="badge badge-success">Success</span></td>
-                  <td className="text-secondary">15 mins ago</td>
-                </tr>
-                <tr>
-                  <td>API Key Created</td>
-                  <td>System</td>
-                  <td><span className="badge badge-info">Info</span></td>
-                  <td className="text-secondary">1 hour ago</td>
-                </tr>
-                <tr>
-                  <td>Device Disconnected</td>
-                  <td>Main-Marketing</td>
-                  <td><span className="badge badge-warning">Warning</span></td>
-                  <td className="text-secondary">2 hours ago</td>
-                </tr>
+                {recentActivity.map((activity) => (
+                  <tr key={activity.id}>
+                    <td>{activity.event}</td>
+                    <td><span className="badge badge-info">{activity.device}</span></td>
+                    <td>
+                      <span className={`badge badge-${activity.status === 'failed' ? 'danger' : 'success'}`}>
+                        {activity.status.charAt(0).toUpperCase() + activity.status.slice(1)}
+                      </span>
+                    </td>
+                    <td className="text-secondary">{formatRelativeTime(activity.time)}</td>
+                  </tr>
+                ))}
+                {recentActivity.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="text-center" style={{ padding: '2rem', color: 'var(--text-muted)' }}>
+                      No recent activity found.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Filter, MessageSquare, Image as ImageIcon, Video, FileText, CheckCheck, Clock, AlertCircle } from "lucide-react";
+import { Search, Filter, MessageSquare, Image as ImageIcon, Video, FileText, CheckCheck, Clock, AlertCircle, RefreshCcw } from "lucide-react";
 
 type MessageLog = {
   id: string;
@@ -17,15 +17,35 @@ type MessageLog = {
 export default function LogsPage() {
   const [logs, setLogs] = useState<MessageLog[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchLogs = async () => {
+    try {
+      const token = localStorage.getItem("wa_token");
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+      const response = await fetch(`${apiUrl}/api/message/logs`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setLogs(result.data.map((log: any) => ({
+          ...log,
+          createdAt: new Date(log.createdAt).toLocaleString()
+        })));
+      }
+    } catch (err) {
+      console.error("Failed to fetch logs:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // Mock data
-    setLogs([
-      { id: "1", deviceId: "client-01", from: "System", to: "628123456789", message: "Hello, this is a test message!", type: "text", status: "read", createdAt: "2024-02-27 10:15:22" },
-      { id: "2", deviceId: "client-01", from: "System", to: "628987654321", message: "Your OTP is 4452", type: "text", status: "sent", createdAt: "2024-02-27 11:05:44" },
-      { id: "3", deviceId: "sales-bot", from: "System", to: "62855667788", message: "catalog.pdf", type: "document", status: "delivered", createdAt: "2024-02-27 11:20:10" },
-      { id: "4", deviceId: "client-01", from: "System", to: "62811223344", message: "Failed to send due to network", type: "text", status: "failed", createdAt: "2024-02-27 11:45:00" },
-    ]);
+    fetchLogs();
   }, []);
 
   const getStatusIcon = (status: MessageLog['status']) => {
@@ -35,6 +55,7 @@ export default function LogsPage() {
       case 'sent': return <CheckCheck size={16} opacity={0.5} />;
       case 'queued': return <Clock size={16} />;
       case 'failed': return <AlertCircle size={16} style={{ color: 'var(--danger)' }} />;
+      default: return null;
     }
   };
 
@@ -71,9 +92,9 @@ export default function LogsPage() {
               onChange={e => setSearchTerm(e.target.value)}
             />
           </div>
-          <button className="btn btn-secondary">
-            <Filter size={18} />
-            <span>Filter</span>
+          <button className="btn btn-secondary" onClick={fetchLogs}>
+            <RefreshCcw size={18} className={isLoading ? "animate-spin" : ""} />
+            <span>Refresh</span>
           </button>
         </div>
       </div>
@@ -92,30 +113,47 @@ export default function LogsPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredLogs.map((log) => (
-                <tr key={log.id}>
-                  <td className="text-secondary" style={{ fontSize: '0.875rem' }}>{log.createdAt}</td>
-                  <td><span className="badge badge-info">{log.deviceId}</span></td>
-                  <td style={{ fontWeight: 600 }}>{log.to}</td>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)' }}>
-                      {getTypeIcon(log.type)}
-                      <span style={{ textTransform: 'capitalize' }}>{log.type}</span>
-                    </div>
-                  </td>
-                  <td style={{ maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {log.message}
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      {getStatusIcon(log.status)}
-                      <span className={`badge badge-${log.status === 'failed' ? 'danger' : log.status === 'read' ? 'info' : 'success'}`} style={{ textTransform: 'capitalize' }}>
-                        {log.status}
-                      </span>
-                    </div>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={6} className="text-center" style={{ padding: '3rem' }}>
+                    <RefreshCcw size={24} className="animate-spin text-accent" style={{ margin: '0 auto' }} />
                   </td>
                 </tr>
-              ))}
+              ) : (
+                <>
+                  {filteredLogs.map((log) => (
+                    <tr key={log.id}>
+                      <td className="text-secondary" style={{ fontSize: '0.875rem' }}>{log.createdAt}</td>
+                      <td><span className="badge badge-info">{log.deviceId}</span></td>
+                      <td style={{ fontWeight: 600 }}>{log.to}</td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)' }}>
+                          {getTypeIcon(log.type)}
+                          <span style={{ textTransform: 'capitalize' }}>{log.type}</span>
+                        </div>
+                      </td>
+                      <td style={{ maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {log.message}
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          {getStatusIcon(log.status)}
+                          <span className={`badge badge-${log.status === 'failed' ? 'danger' : log.status === 'read' ? 'info' : 'success'}`} style={{ textTransform: 'capitalize' }}>
+                            {log.status}
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredLogs.length === 0 && (
+                    <tr>
+                      <td colSpan={6} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                        No logs found.
+                      </td>
+                    </tr>
+                  )}
+                </>
+              )}
             </tbody>
           </table>
         </div>

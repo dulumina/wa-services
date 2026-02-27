@@ -336,8 +336,30 @@ const sendMedia = async (req, res) => {
   }
 };
 
+const getMessageLogs = async (req, res) => {
+  try {
+    const logs = await MessageLog.findAll({
+      where: { userId: req.user.id },
+      order: [["createdAt", "DESC"]],
+      limit: 100,
+    });
+
+    res.json({
+      status: true,
+      data: logs,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: false,
+      message: "Failed to get message logs",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   sendMessage,
   sendBulkMessage,
   sendMedia,
+  getMessageLogs,
 };

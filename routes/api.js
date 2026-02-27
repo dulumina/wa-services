@@ -20,10 +20,13 @@ router.use("/", authRoutes);
 const apiKeyRoutes = require("./apiKeys");
 const deviceRoutes = require("./devices");
 const webhookRoutes = require("./webhooks");
+const dashboardController = require("../controllers/dashboardController");
 
 router.use("/api-keys", userRateLimiter, apiKeyRoutes);
 router.use("/devices", userRateLimiter, deviceRoutes);
 router.use("/webhooks", userRateLimiter, webhookRoutes);
+
+router.get("/dashboard/stats", userRateLimiter, authenticate, dashboardController.getStats);
 
 /**
  * @swagger
@@ -73,6 +76,12 @@ router.post(
   userRateLimiter,
   authenticate,
   messageController.sendMessage,
+);
+router.get(
+  "/message/logs",
+  userRateLimiter,
+  authenticate,
+  messageController.getMessageLogs,
 );
 
 /**
