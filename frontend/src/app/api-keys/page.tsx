@@ -20,7 +20,7 @@ export default function ApiKeysPage() {
   const fetchKeys = async () => {
     try {
       const token = localStorage.getItem("wa_token");
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
 
       const response = await fetch(`${apiUrl}/api/api-keys`, {
         headers: {
@@ -51,7 +51,7 @@ export default function ApiKeysPage() {
     if (newKey.label) {
       try {
         const token = localStorage.getItem("wa_token");
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
 
         const response = await fetch(`${apiUrl}/api/api-keys`, {
           method: 'POST',
@@ -78,7 +78,7 @@ export default function ApiKeysPage() {
 
     try {
       const token = localStorage.getItem("wa_token");
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
 
       const response = await fetch(`${apiUrl}/api/api-keys/${id}`, {
         method: 'DELETE',
@@ -103,7 +103,7 @@ export default function ApiKeysPage() {
 
     try {
       const token = localStorage.getItem("wa_token");
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
 
       const response = await fetch(`${apiUrl}/api/api-keys/${id}/regenerate`, {
         method: 'POST',

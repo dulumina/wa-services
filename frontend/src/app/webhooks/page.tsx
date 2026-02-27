@@ -20,7 +20,7 @@ export default function WebhooksPage() {
   const fetchWebhooks = async () => {
     try {
       const token = localStorage.getItem("wa_token");
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
 
       const response = await fetch(`${apiUrl}/api/webhooks`, {
         headers: {
@@ -51,7 +51,7 @@ export default function WebhooksPage() {
     if (newWebhook.url) {
       try {
         const token = localStorage.getItem("wa_token");
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
 
         const response = await fetch(`${apiUrl}/api/webhooks`, {
           method: 'POST',
@@ -78,7 +78,7 @@ export default function WebhooksPage() {
 
     try {
       const token = localStorage.getItem("wa_token");
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
 
       const response = await fetch(`${apiUrl}/api/webhooks/${id}`, {
         method: 'DELETE',
@@ -98,7 +98,7 @@ export default function WebhooksPage() {
   const testWebhook = async (id: string) => {
     try {
       const token = localStorage.getItem("wa_token");
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
 
       const response = await fetch(`${apiUrl}/api/webhooks/${id}/test`, {
         method: 'POST',

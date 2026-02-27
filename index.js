@@ -11,10 +11,10 @@ const express = require("express");
 const cors = require("cors");
 const socketIO = require("socket.io");
 const http = require("http");
+const path = require("path");
 const fileUpload = require("express-fileupload");
 
 const apiRouter = require("./routes/api");
-const webRouter = require("./routes/web");
 const whatsappService = require("./services/whatsapp");
 const { authenticate } = require("./middleware/auth");
 const sequelize = require("./config/database");
@@ -60,8 +60,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(fileUpload({ debug: false }));
 
 // Routes
-app.use("/", webRouter);
 app.use("/api", apiRouter);
+
 /**
  * @swagger
  * /admin/queues:
@@ -102,6 +102,15 @@ const startApp = async () => {
      */
     app.get("/health", (req, res) => {
       res.json({ status: "ok", time: new Date() });
+    });
+
+    // Frontend Static Serving & Catch-all
+    app.use(express.static(path.join(__dirname, "frontend/out"), {
+      extensions: ['html']
+    }));
+
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(__dirname, "frontend/out/index.html"));
     });
 
     // Start server

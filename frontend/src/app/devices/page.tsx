@@ -23,7 +23,7 @@ export default function DevicesPage() {
   const fetchDevices = async () => {
     try {
       const token = localStorage.getItem("wa_token");
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
 
       const response = await fetch(`${apiUrl}/api/devices`, {
         headers: {
@@ -52,7 +52,7 @@ export default function DevicesPage() {
   useEffect(() => {
     fetchDevices();
 
-    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:8000";
+    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || "";
     const token = localStorage.getItem("wa_token");
     const newSocket = io(socketUrl, {
       auth: { token }
@@ -109,7 +109,7 @@ export default function DevicesPage() {
     if (newDevice.id && socket) {
       try {
         const token = localStorage.getItem("wa_token");
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
 
         // 1. Create device in database first
         const response = await fetch(`${apiUrl}/api/devices`, {
@@ -160,7 +160,7 @@ export default function DevicesPage() {
   const removeDevice = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     const token = localStorage.getItem("wa_token");
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
 
     fetch(`${apiUrl}/api/devices/${id}/logout`, {
       method: 'POST',

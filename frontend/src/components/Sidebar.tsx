@@ -33,7 +33,7 @@ export function Sidebar() {
     { name: "Webhooks", href: "/webhooks", icon: Settings },
     { name: "Message Logs", href: "/logs", icon: LayoutDashboard },
     { name: "Monitoring", href: "/status", icon: Activity },
-    { name: "API Docs", href: "http://localhost:8000/api-docs", icon: FileText },
+    { name: "API Docs", href: "/api-docs", icon: FileText },
   ];
 
   return (

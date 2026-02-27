@@ -21,7 +21,7 @@ export default function StatusPage() {
     const fetchInitialStatuses = async () => {
       try {
         const token = localStorage.getItem("wa_token");
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
         const response = await fetch(`${apiUrl}/api/devices`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -40,7 +40,7 @@ export default function StatusPage() {
     fetchInitialStatuses();
 
     // 2. Socket Connection
-    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:8000";
+    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || "";
     const token = localStorage.getItem("wa_token");
     const socket = io(socketUrl, {
       auth: { token }
