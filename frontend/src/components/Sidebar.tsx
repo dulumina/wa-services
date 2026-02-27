@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LayoutDashboard, Smartphone, Key, Activity, Settings, LogOut, FileText } from "lucide-react";
@@ -8,8 +9,16 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const token = typeof window !== 'undefined' ? localStorage.getItem("wa_token") : null;
-  if (pathname === "/login" || pathname === "/register" || !token) return null;
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const token = localStorage.getItem("wa_token");
+    setIsAuthenticated(!!token);
+  }, []);
+
+  if (!mounted || pathname === "/login" || pathname === "/register" || !isAuthenticated) return null;
 
   const handleLogout = () => {
     localStorage.removeItem("wa_token");
