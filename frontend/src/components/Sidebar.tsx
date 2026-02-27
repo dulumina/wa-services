@@ -8,7 +8,8 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  if (pathname === "/login" || pathname === "/register") return null;
+  const token = typeof window !== 'undefined' ? localStorage.getItem("wa_token") : null;
+  if (pathname === "/login" || pathname === "/register" || !token) return null;
 
   const handleLogout = () => {
     localStorage.removeItem("wa_token");
