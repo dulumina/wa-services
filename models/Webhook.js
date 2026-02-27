@@ -22,6 +22,10 @@ const Webhook = sequelize.define('Webhook', {
   isActive: {
     type: DataTypes.BOOLEAN,
     defaultValue: true
+  },
+  secret: {
+    type: DataTypes.STRING,
+    allowNull: true,
   }
 });
 

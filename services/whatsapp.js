@@ -2,7 +2,7 @@ const { Client, LocalAuth } = require("whatsapp-web.js");
 const qrcode = require("qrcode");
 const fs = require("fs");
 const path = require("path");
-
+const { Device, MessageLog, Webhook } = require("../models");
 
 const sessions = [];
 const SESSIONS_FILE = "./whatsapp-device/whatsapp-sessions.json";
@@ -32,14 +32,28 @@ const getSessionsFile = function () {
   return JSON.parse(fs.readFileSync(SESSIONS_FILE));
 };
 
-const createSession = function (id, description, io) {
+const createSession = async function (id, description, io) {
   console.log("Creating session: " + id);
-  
+
+  // Check if device exists in database - required for userId
+  const device = await Device.findByPk(id);
+  if (!device) {
+    console.log(`Device ${id} not found in database. Removing from local sessions.`);
+    const savedSessions = getSessionsFile();
+    const sessionIndex = savedSessions.findIndex((sess) => sess.id == id);
+    if (sessionIndex !== -1) {
+      savedSessions.splice(sessionIndex, 1);
+      setSessionsFile(savedSessions);
+    }
+    return;
+  }
+  const userId = device.userId;
+
   // Cleanup stale Chromium lock files
-  const sessionPath = path.join(process.cwd(), '.wwebjs_auth', `session-${id}`);
-  const lockFiles = ['SingletonLock', 'SingletonCookie', 'SingletonSocket'];
-  
-  lockFiles.forEach(file => {
+  const sessionPath = path.join(process.cwd(), ".wwebjs_auth", `session-${id}`);
+  const lockFiles = ["SingletonLock", "SingletonCookie", "SingletonSocket"];
+
+  lockFiles.forEach((file) => {
     const lockFilePath = path.join(sessionPath, file);
     if (fs.existsSync(lockFilePath)) {
       try {
@@ -68,7 +82,7 @@ const createSession = function (id, description, io) {
     },
     authStrategy: new LocalAuth({
       clientId: id,
-      dataPath: './.wwebjs_auth'
+      dataPath: "./.wwebjs_auth",
     }),
   });
 
@@ -80,11 +94,26 @@ const createSession = function (id, description, io) {
       io.emit("qr", { id: id, src: url });
       io.emit("message", { id: id, text: "QR Code received, scan please!" });
     });
+
+    // Update device status in database
+    if (device) {
+      device.update({ status: "authenticating", ready: false });
+    }
   });
 
-  client.on("ready", () => {
+  client.on("ready", async () => {
     io.emit("ready", { id: id });
     io.emit("message", { id: id, text: "Whatsapp is ready!" });
+
+    // Get phone number
+    const phoneNumber = client.info.me.user;
+
+    // Update device status in database
+    await device.update({
+      status: "connected",
+      ready: true,
+      phoneNumber: phoneNumber,
+    });
 
     const savedSessions = getSessionsFile();
     const sessionIndex = savedSessions.findIndex((sess) => sess.id == id);
@@ -101,9 +130,13 @@ const createSession = function (id, description, io) {
 
   client.on("auth_failure", function () {
     io.emit("message", { id: id, text: "Auth failure, restarting..." });
+
+    if (device) {
+      device.update({ status: "disconnected", ready: false });
+    }
   });
 
-  client.on("disconnected", (reason) => {
+  client.on("disconnected", async (reason) => {
     io.emit("message", { id: id, text: "Whatsapp is disconnected!" });
     client.destroy();
     client.initialize();
@@ -115,16 +148,41 @@ const createSession = function (id, description, io) {
       setSessionsFile(savedSessions);
     }
 
+    // Update device status in database
+    if (device) {
+      await device.update({
+        status: "disconnected",
+        ready: false,
+        phoneNumber: null,
+      });
+    }
+
     io.emit("remove-session", id);
   });
 
-  client.on("message", (msg) => {
+  client.on("message", async (msg) => {
     if (msg.body == "!ping") {
       msg.reply("pong");
     } else if (msg.body == "good morning") {
       msg.reply("selamat pagi");
     } else {
       console.log(msg.from + " : " + msg.body);
+
+      // Log incoming message
+      if (device && device.userId) {
+        const from = msg.from.replace("@c.us", "");
+        const to = msg.to.replace("@c.us", "");
+
+        await MessageLog.create({
+          deviceId: id,
+          userId: device.userId,
+          from: to,
+          to: from,
+          message: msg.body,
+          type: "text",
+          status: "delivered",
+        });
+      }
     }
   });
 
@@ -147,30 +205,73 @@ const createSession = function (id, description, io) {
   }
 };
 
-const init = function (socket, io) {
-  const savedSessions = getSessionsFile();
+const init = async function (socket, io) {
+  // Try to sync with database for device sessions
+  try {
+    // Only get devices that have a valid userId
+    const dbDevices = await Device.findAll({
+      where: {
+        userId: {
+          [require("sequelize").Op.ne]: null,
+        },
+      },
+    });
 
-  if (savedSessions.length > 0) {
-    if (socket) {
-      savedSessions.forEach((e, i, arr) => {
-        arr[i].ready = false;
-      });
-
-      socket.emit("init", savedSessions);
+    if (dbDevices.length > 0) {
+      if (socket) {
+        const sessionData = dbDevices.map((d) => ({
+          id: d.id,
+          description: d.description,
+          ready: d.ready,
+        }));
+        socket.emit("init", sessionData);
+      } else {
+        dbDevices.forEach((sess) => {
+          createSession(sess.id, sess.description, io);
+        });
+      }
     } else {
-      savedSessions.forEach((sess) => {
-        createSession(sess.id, sess.description, io);
-      });
+      // Fallback to JSON file
+      const savedSessions = getSessionsFile();
+      if (savedSessions.length > 0) {
+        if (socket) {
+          savedSessions.forEach((e, i, arr) => {
+            arr[i].ready = false;
+          });
+          socket.emit("init", savedSessions);
+        } else {
+          savedSessions.forEach((sess) => {
+            createSession(sess.id, sess.description, io);
+          });
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error loading sessions from database:", error);
+
+    // Fallback to JSON file
+    const savedSessions = getSessionsFile();
+    if (savedSessions.length > 0) {
+      if (socket) {
+        savedSessions.forEach((e, i, arr) => {
+          arr[i].ready = false;
+        });
+        socket.emit("init", savedSessions);
+      } else {
+        savedSessions.forEach((sess) => {
+          createSession(sess.id, sess.description, io);
+        });
+      }
     }
   }
 };
 
 const getClient = (id) => {
   return sessions.find((sess) => sess.id == id)?.client;
-}
+};
 
 module.exports = {
   createSession,
   init,
-  getClient
+  getClient,
 };

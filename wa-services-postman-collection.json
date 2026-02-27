@@ -61,6 +61,39 @@
       "response": []
     },
     {
+      "name": "Send Media Message",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/api/send-media",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "send-media"
+          ]
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"sender\": \"{{sender}}\",\n    \"number\": \"{{phoneNumber}}\",\n    \"message\": \"{{message}}\",\n    \"fileUrl\": \"https://via.placeholder.com/150\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "description": "Send a WhatsApp media message using a file URL or base64 encoded string"
+      },
+      "response": []
+    },
+    {
       "name": "Get Web Page",
       "request": {
         "method": "GET",
