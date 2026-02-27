@@ -27,8 +27,7 @@ const getDevices = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       status: false,
-      message: "Failed to get devices",
-      error: error.message,
+      message: "An error occurred",
     });
   }
 };
@@ -67,8 +66,7 @@ const getDevice = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       status: false,
-      message: "Failed to get device",
-      error: error.message,
+      message: "An error occurred",
     });
   }
 };
@@ -131,8 +129,7 @@ const createDevice = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       status: false,
-      message: "Failed to create device",
-      error: error.message,
+      message: "An error occurred",
     });
   }
 };
@@ -174,8 +171,7 @@ const updateDevice = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       status: false,
-      message: "Failed to update device",
-      error: error.message,
+      message: "An error occurred",
     });
   }
 };
@@ -214,8 +210,7 @@ const deleteDevice = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       status: false,
-      message: "Failed to delete device",
-      error: error.message,
+      message: "An error occurred",
     });
   }
 };
@@ -258,8 +253,7 @@ const logoutDevice = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       status: false,
-      message: "Failed to logout device",
-      error: error.message,
+      message: "An error occurred",
     });
   }
 };
@@ -300,8 +294,7 @@ const getDeviceQr = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       status: false,
-      message: "Failed to get QR code",
-      error: error.message,
+      message: "An error occurred",
     });
   }
 };

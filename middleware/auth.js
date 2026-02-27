@@ -19,10 +19,11 @@ const authenticate = async (req, res, next) => {
     const token = authHeader.split(" ")[1];
 
     // Verify JWT token
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || "your-secret-key",
-    );
+    const tokenSecret = process.env.JWT_SECRET;
+    if (!tokenSecret) {
+      throw new Error("JWT_SECRET is not defined");
+    }
+    const decoded = jwt.verify(token, tokenSecret);
 
     // Find user
     const user = await User.findByPk(decoded.userId);
@@ -113,11 +114,11 @@ const optionalAuth = async (req, res, next) => {
     }
     // Then check for JWT
     else if (authHeader && authHeader.startsWith("Bearer ")) {
-      const token = authHeader.split(" ")[1];
-      const decoded = jwt.verify(
-        token,
-        process.env.JWT_SECRET || "your-secret-key",
-      );
+      const tokenSecret = process.env.JWT_SECRET;
+      if (!tokenSecret) {
+        throw new Error("JWT_SECRET is not defined");
+      }
+      const decoded = jwt.verify(token, tokenSecret);
       const user = await User.findByPk(decoded.userId);
 
       if (user) {

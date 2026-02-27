@@ -18,8 +18,7 @@ const getWebhooks = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       status: false,
-      message: "Failed to get webhooks",
-      error: error.message,
+      message: "An error occurred",
     });
   }
 };
@@ -50,8 +49,7 @@ const getWebhook = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       status: false,
-      message: "Failed to get webhook",
-      error: error.message,
+      message: "An error occurred",
     });
   }
 };
@@ -94,8 +92,7 @@ const createWebhook = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       status: false,
-      message: "Failed to create webhook",
-      error: error.message,
+      message: "An error occurred",
     });
   }
 };
@@ -152,8 +149,7 @@ const updateWebhook = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       status: false,
-      message: "Failed to update webhook",
-      error: error.message,
+      message: "An error occurred",
     });
   }
 };
@@ -185,8 +181,7 @@ const deleteWebhook = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       status: false,
-      message: "Failed to delete webhook",
-      error: error.message,
+      message: "An error occurred",
     });
   }
 };
@@ -237,14 +232,12 @@ const testWebhook = async (req, res) => {
       res.status(400).json({
         status: false,
         message: "Failed to send test webhook",
-        error: axiosError.message,
       });
     }
   } catch (error) {
     res.status(500).json({
       status: false,
-      message: "Failed to test webhook",
-      error: error.message,
+      message: "An error occurred",
     });
   }
 };

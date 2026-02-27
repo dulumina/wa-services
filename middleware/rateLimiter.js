@@ -104,8 +104,21 @@ const globalRateLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Auth rate limiter (for login and register)
+const authRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: parseInt(process.env.AUTH_RATE_LIMIT_MAX_REQUESTS) || 20, // limit each IP to 20 requests per windowMs
+  message: {
+    status: false,
+    message: "Too many login/registration attempts, please try again after 15 minutes.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 module.exports = {
   apiKeyRateLimiter,
   userRateLimiter,
   globalRateLimiter,
+  authRateLimiter,
 };

@@ -6,7 +6,11 @@ const { v4: uuidv4 } = require("uuid");
  * Generate JWT Token
  */
 const generateToken = (userId) => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET || "your-secret-key", {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error("JWT_SECRET is not defined in environment variables");
+  }
+  return jwt.sign({ userId }, secret, {
     expiresIn: process.env.JWT_EXPIRES_IN || "7d",
   });
 };
@@ -15,9 +19,13 @@ const generateToken = (userId) => {
  * Generate Refresh Token
  */
 const generateRefreshToken = (userId) => {
+  const secret = process.env.JWT_REFRESH_SECRET;
+  if (!secret) {
+    throw new Error("JWT_REFRESH_SECRET is not defined in environment variables");
+  }
   return jwt.sign(
     { userId, type: "refresh" },
-    process.env.JWT_REFRESH_SECRET || "your-refresh-secret-key",
+    secret,
     { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || "30d" },
   );
 };
@@ -81,8 +89,7 @@ const register = async (req, res) => {
     console.error("Register error:", error);
     res.status(500).json({
       status: false,
-      message: "Registration failed",
-      error: error.message,
+      message: "Registration failed. Please try again later.",
     });
   }
 };
@@ -154,8 +161,7 @@ const login = async (req, res) => {
     console.error("Login error:", error);
     res.status(500).json({
       status: false,
-      message: "Login failed",
-      error: error.message,
+      message: "Login failed. Please try again later.",
     });
   }
 };
@@ -174,11 +180,12 @@ const refreshToken = async (req, res) => {
       });
     }
 
+    const secret = process.env.JWT_REFRESH_SECRET;
+    if (!secret) {
+      throw new Error("JWT_REFRESH_SECRET is not defined");
+    }
     // Verify refresh token
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_REFRESH_SECRET || "your-refresh-secret-key",
-    );
+    const decoded = jwt.verify(token, secret);
 
     // Find user
     const user = await User.findByPk(decoded.userId);
@@ -238,7 +245,6 @@ const getProfile = async (req, res) => {
     res.status(500).json({
       status: false,
       message: "Failed to get profile",
-      error: error.message,
     });
   }
 };
@@ -299,7 +305,6 @@ const updateProfile = async (req, res) => {
     res.status(500).json({
       status: false,
       message: "Failed to update profile",
-      error: error.message,
     });
   }
 };

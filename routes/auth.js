@@ -3,6 +3,7 @@ const router = express.Router();
 const { body } = require("express-validator");
 const authController = require("../controllers/authController");
 const { authenticate } = require("../middleware/auth");
+const { authRateLimiter } = require("../middleware/rateLimiter");
 
 // Validation rules
 const registerValidation = [
@@ -19,8 +20,8 @@ const loginValidation = [
 ];
 
 // Public routes
-router.post("/register", registerValidation, authController.register);
-router.post("/login", loginValidation, authController.login);
+router.post("/register", authRateLimiter, registerValidation, authController.register);
+router.post("/login", authRateLimiter, loginValidation, authController.login);
 router.post("/refresh-token", authController.refreshToken);
 
 // Protected routes

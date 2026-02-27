@@ -19,8 +19,7 @@ const getApiKeys = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       status: false,
-      message: "Failed to get API keys",
-      error: error.message,
+      message: "An error occurred",
     });
   }
 };
@@ -53,8 +52,7 @@ const createApiKey = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       status: false,
-      message: "Failed to create API key",
-      error: error.message,
+      message: "An error occurred",
     });
   }
 };
@@ -98,8 +96,7 @@ const updateApiKey = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       status: false,
-      message: "Failed to update API key",
-      error: error.message,
+      message: "An error occurred",
     });
   }
 };
@@ -143,8 +140,7 @@ const deleteApiKey = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       status: false,
-      message: "Failed to delete API key",
-      error: error.message,
+      message: "An error occurred",
     });
   }
 };
@@ -185,8 +181,7 @@ const regenerateApiKey = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       status: false,
-      message: "Failed to regenerate API key",
-      error: error.message,
+      message: "An error occurred",
     });
   }
 };

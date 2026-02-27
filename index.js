@@ -16,6 +16,7 @@ const fileUpload = require("express-fileupload");
 const apiRouter = require("./routes/api");
 const webRouter = require("./routes/web");
 const whatsappService = require("./services/whatsapp");
+const { authenticate } = require("./middleware/auth");
 const sequelize = require("./config/database");
 
 // Queue setup
@@ -47,7 +48,11 @@ const io = socketIO(server, {
   },
 });
 
-app.use(cors());
+app.use(cors({
+  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(",") : "*",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 
 app.use(express.json());
@@ -57,7 +62,8 @@ app.use(fileUpload({ debug: false }));
 // Routes
 app.use("/", webRouter);
 app.use("/api", apiRouter);
-app.use("/admin/queues", serverAdapter.getRouter());
+// Secure Bull Board with authentication
+app.use("/admin/queues", authenticate, serverAdapter.getRouter());
 
 // Initialize Database and Whatsapp Sessions
 const startApp = async () => {

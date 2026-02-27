@@ -3,6 +3,7 @@ const { getClient } = require("../services/whatsapp");
 const { MessageLog, Device } = require("../models");
 const webhookService = require("../services/webhook");
 const { MessageMedia } = require("whatsapp-web.js");
+const { isSafeUrl } = require("../helpers/security");
 
 const sendMessage = async (req, res) => {
   try {
@@ -83,7 +84,7 @@ const sendMessage = async (req, res) => {
 
         res.status(500).json({
           status: false,
-          response: err.message,
+          message: "An error occurred",
         });
       });
   } catch (error) {
@@ -91,7 +92,6 @@ const sendMessage = async (req, res) => {
     res.status(500).json({
       status: false,
       message: "Internal server error",
-      error: error.message,
     });
   }
 };
@@ -163,7 +163,6 @@ const sendBulkMessage = async (req, res) => {
     res.status(500).json({
       status: false,
       message: "Internal server error",
-      error: error.message,
     });
   }
 };
@@ -215,10 +214,9 @@ const sendMedia = async (req, res) => {
 
     try {
       if (fileUrl) {
-        // Validate URL
-        const url = new URL(fileUrl);
-        if (!["http:", "https:"].includes(url.protocol)) {
-            return res.status(400).json({ status: false, message: "Invalid URL protocol" });
+        // SSRF Protection
+        if (!(await isSafeUrl(fileUrl))) {
+            return res.status(400).json({ status: false, message: "Invalid or restricted media URL" });
         }
         media = await MessageMedia.fromUrl(fileUrl, { unsafeMime: true });
       } else if (fileBase64) {
@@ -263,7 +261,6 @@ const sendMedia = async (req, res) => {
       return res.status(400).json({
         status: false,
         message: "Failed to process media file",
-        error: e.message
       });
     }
 
@@ -323,7 +320,7 @@ const sendMedia = async (req, res) => {
 
         res.status(500).json({
           status: false,
-          response: err.message,
+          message: "An error occurred",
         });
       });
   } catch (error) {
@@ -331,7 +328,6 @@ const sendMedia = async (req, res) => {
     res.status(500).json({
       status: false,
       message: "Internal server error",
-      error: error.message,
     });
   }
 };
@@ -352,7 +348,6 @@ const getMessageLogs = async (req, res) => {
     res.status(500).json({
       status: false,
       message: "Failed to get message logs",
-      error: error.message,
     });
   }
 };
