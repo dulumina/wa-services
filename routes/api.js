@@ -14,7 +14,7 @@ const { ipWhitelist } = require("../middleware/ipWhitelist");
 router.use("/", globalRateLimiter, ipWhitelist);
 
 const authRoutes = require("./auth");
-router.use("/", authRoutes);
+router.use("/auth", authRoutes);
 
 // Protected routes (JWT authentication) - with user rate limit
 const apiKeyRoutes = require("./apiKeys");
@@ -26,6 +26,17 @@ router.use("/api-keys", userRateLimiter, apiKeyRoutes);
 router.use("/devices", userRateLimiter, deviceRoutes);
 router.use("/webhooks", userRateLimiter, webhookRoutes);
 
+/**
+ * @swagger
+ * /api/dashboard/stats:
+ *   get:
+ *     summary: Get dashboard statistics
+ *     tags: [System]
+ *     security: [{ BearerAuth: [] }]
+ *     responses:
+ *       200:
+ *         description: Dashboard stats
+ */
 router.get("/dashboard/stats", userRateLimiter, authenticate, dashboardController.getStats);
 
 /**
@@ -33,6 +44,7 @@ router.get("/dashboard/stats", userRateLimiter, authenticate, dashboardControlle
  * /api/send-message:
  *   post:
  *     summary: Send a WhatsApp message
+ *     tags: [Messages]
  *     security:
  *       - ApiKeyAuth: []
  *     requestBody:
@@ -58,6 +70,7 @@ router.post(
  * /api/message/send:
  *   post:
  *     summary: Send a WhatsApp message (Web App)
+ *     tags: [Messages]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -77,6 +90,18 @@ router.post(
   authenticate,
   messageController.sendMessage,
 );
+
+/**
+ * @swagger
+ * /api/message/logs:
+ *   get:
+ *     summary: Get message logs
+ *     tags: [Messages]
+ *     security: [{ BearerAuth: [] }]
+ *     responses:
+ *       200:
+ *         description: List of message logs
+ */
 router.get(
   "/message/logs",
   userRateLimiter,
@@ -89,6 +114,7 @@ router.get(
  * /api/send-bulk-message:
  *   post:
  *     summary: Send bulk WhatsApp messages via queue
+ *     tags: [Messages]
  *     security:
  *       - ApiKeyAuth: []
  *     requestBody:
@@ -113,6 +139,7 @@ router.post(
  * /api/message/send-bulk:
  *   post:
  *     summary: Send bulk WhatsApp messages via queue (Web App)
+ *     tags: [Messages]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -137,6 +164,7 @@ router.post(
  * /api/send-media:
  *   post:
  *     summary: Send a WhatsApp media message
+ *     tags: [Messages]
  *     security:
  *       - ApiKeyAuth: []
  *     requestBody:
@@ -162,6 +190,7 @@ router.post(
  * /api/message/send-media:
  *   post:
  *     summary: Send a WhatsApp media message (Web App)
+ *     tags: [Messages]
  *     security:
  *       - BearerAuth: []
  *     requestBody:

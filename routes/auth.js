@@ -22,7 +22,7 @@ const loginValidation = [
 // Public routes
 /**
  * @swagger
- * /api/register:
+ * /api/auth/register:
  *   post:
  *     summary: Register a new user
  *     tags: [Auth]
@@ -45,7 +45,7 @@ router.post("/register", authRateLimiter, registerValidation, authController.reg
 
 /**
  * @swagger
- * /api/login:
+ * /api/auth/login:
  *   post:
  *     summary: Login user
  *     tags: [Auth]
@@ -67,7 +67,7 @@ router.post("/login", authRateLimiter, loginValidation, authController.login);
 
 /**
  * @swagger
- * /api/refresh-token:
+ * /api/auth/refresh-token:
  *   post:
  *     summary: Refresh JWT token
  *     tags: [Auth]
@@ -87,7 +87,40 @@ router.post("/login", authRateLimiter, loginValidation, authController.login);
 router.post("/refresh-token", authController.refreshToken);
 
 // Protected routes
+/**
+ * @swagger
+ * /api/auth/me:
+ *   get:
+ *     summary: Get current user profile
+ *     tags: [Auth]
+ *     security: [{ BearerAuth: [] }]
+ *     responses:
+ *       200:
+ *         description: User profile
+ */
+router.get("/me", authenticate, authController.getProfile);
 router.get("/profile", authenticate, authController.getProfile);
+
+/**
+ * @swagger
+ * /api/auth/profile:
+ *   put:
+ *     summary: Update user profile
+ *     tags: [Auth]
+ *     security: [{ BearerAuth: [] }]
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username: { type: string }
+ *               email: { type: string }
+ *               password: { type: string }
+ *     responses:
+ *       200:
+ *         description: Profile updated
+ */
 router.put("/profile", authenticate, authController.updateProfile);
 
 module.exports = router;

@@ -62,6 +62,17 @@ app.use(fileUpload({ debug: false }));
 // Routes
 app.use("/", webRouter);
 app.use("/api", apiRouter);
+/**
+ * @swagger
+ * /admin/queues:
+ *   get:
+ *     summary: Queue monitoring dashboard (Bull Board)
+ *     tags: [System]
+ *     security: [{ BearerAuth: [] }]
+ *     responses:
+ *       200:
+ *         description: Bull Board UI
+ */
 // Secure Bull Board with authentication
 app.use("/admin/queues", authenticate, serverAdapter.getRouter());
 
@@ -79,7 +90,16 @@ const startApp = async () => {
       console.error("Error during initial sessions load:", err);
     }
 
-    // Health check
+    /**
+     * @swagger
+     * /health:
+     *   get:
+     *     summary: Health check
+     *     tags: [System]
+     *     responses:
+     *       200:
+     *         description: System is healthy
+     */
     app.get("/health", (req, res) => {
       res.json({ status: "ok", time: new Date() });
     });
