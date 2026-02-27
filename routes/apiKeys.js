@@ -8,27 +8,27 @@ const { authenticate } = require("../middleware/auth");
 router.use(authenticate);
 
 // Get all API keys
-router.get("/api-keys", apiKeyController.getApiKeys);
+router.get("/", apiKeyController.getApiKeys);
 
 // Create new API key
 router.post(
-  "/api-keys",
+  "/",
   body("label").optional().isString(),
   apiKeyController.createApiKey,
 );
 
 // Update API key
 router.put(
-  "/api-keys/:id",
+  "/:id",
   body("label").optional().isString(),
   body("isActive").optional().isBoolean(),
   apiKeyController.updateApiKey,
 );
 
 // Delete API key
-router.delete("/api-keys/:id", apiKeyController.deleteApiKey);
+router.delete("/:id", apiKeyController.deleteApiKey);
 
 // Regenerate API key
-router.post("/api-keys/:id/regenerate", apiKeyController.regenerateApiKey);
+router.post("/:id/regenerate", apiKeyController.regenerateApiKey);
 
 module.exports = router;

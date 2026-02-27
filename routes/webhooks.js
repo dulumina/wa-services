@@ -8,14 +8,14 @@ const { authenticate } = require("../middleware/auth");
 router.use(authenticate);
 
 // Get all webhooks
-router.get("/webhooks", webhookController.getWebhooks);
+router.get("/", webhookController.getWebhooks);
 
 // Get single webhook
-router.get("/webhooks/:id", webhookController.getWebhook);
+router.get("/:id", webhookController.getWebhook);
 
 // Create new webhook
 router.post(
-  "/webhooks",
+  "/",
   body("url").isURL().withMessage("Valid URL is required"),
   body("event").optional().isString(),
   webhookController.createWebhook,
@@ -23,7 +23,7 @@ router.post(
 
 // Update webhook
 router.put(
-  "/webhooks/:id",
+  "/:id",
   body("url").optional().isURL(),
   body("event").optional().isString(),
   body("isActive").optional().isBoolean(),
@@ -31,9 +31,9 @@ router.put(
 );
 
 // Delete webhook
-router.delete("/webhooks/:id", webhookController.deleteWebhook);
+router.delete("/:id", webhookController.deleteWebhook);
 
 // Test webhook
-router.post("/webhooks/:id/test", webhookController.testWebhook);
+router.post("/:id/test", webhookController.testWebhook);
 
 module.exports = router;
