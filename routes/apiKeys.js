@@ -8,16 +8,67 @@ const { authenticate } = require("../middleware/auth");
 router.use(authenticate);
 
 // Get all API keys
+/**
+ * @swagger
+ * /api/api-keys:
+ *   get:
+ *     summary: Get all API keys
+ *     tags: [API Keys]
+ *     security: [{ BearerAuth: [] }]
+ *     responses:
+ *       200:
+ *         description: List of API keys
+ */
 router.get("/", apiKeyController.getApiKeys);
 
-// Create new API key
+/**
+ * @swagger
+ * /api/api-keys:
+ *   post:
+ *     summary: Create a new API key
+ *     tags: [API Keys]
+ *     security: [{ BearerAuth: [] }]
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               label: { type: string }
+ *     responses:
+ *       201:
+ *         description: API key created
+ */
 router.post(
   "/",
   body("label").optional().isString(),
   apiKeyController.createApiKey,
 );
 
-// Update API key
+/**
+ * @swagger
+ * /api/api-keys/{id}:
+ *   put:
+ *     summary: Update API key
+ *     tags: [API Keys]
+ *     security: [{ BearerAuth: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               label: { type: string }
+ *               isActive: { type: boolean }
+ *     responses:
+ *       200:
+ *         description: API key updated
+ */
 router.put(
   "/:id",
   body("label").optional().isString(),
@@ -25,10 +76,40 @@ router.put(
   apiKeyController.updateApiKey,
 );
 
-// Delete API key
+/**
+ * @swagger
+ * /api/api-keys/{id}:
+ *   delete:
+ *     summary: Delete API key
+ *     tags: [API Keys]
+ *     security: [{ BearerAuth: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: API key deleted
+ */
 router.delete("/:id", apiKeyController.deleteApiKey);
 
-// Regenerate API key
+/**
+ * @swagger
+ * /api/api-keys/{id}/regenerate:
+ *   post:
+ *     summary: Regenerate API key
+ *     tags: [API Keys]
+ *     security: [{ BearerAuth: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Key regenerated
+ */
 router.post("/:id/regenerate", apiKeyController.regenerateApiKey);
 
 module.exports = router;
