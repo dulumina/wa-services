@@ -53,7 +53,10 @@ export default function DevicesPage() {
     fetchDevices();
 
     const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:8000";
-    const newSocket = io(socketUrl);
+    const token = localStorage.getItem("wa_token");
+    const newSocket = io(socketUrl, {
+      auth: { token }
+    });
     setSocket(newSocket);
 
     newSocket.on("init", (data: any[]) => {

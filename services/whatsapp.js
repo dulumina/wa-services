@@ -99,8 +99,8 @@ const createSession = async function (id, description, io) {
     console.log("QR RECEIVED", qr);
     qrcode.toDataURL(qr, (err, url) => {
       qrs[id] = url; // Store QR
-      io.emit("qr", { id: id, src: url });
-      io.emit("message", { id: id, text: "QR Code received, scan please!" });
+      io.to(`user:${userId}`).emit("qr", { id: id, src: url });
+      io.to(`user:${userId}`).emit("message", { id: id, text: "QR Code received, scan please!" });
     });
 
     // Update device status in database
@@ -111,8 +111,8 @@ const createSession = async function (id, description, io) {
 
   client.on("ready", async () => {
     delete qrs[id]; // Clear QR on success
-    io.emit("ready", { id: id });
-    io.emit("message", { id: id, text: "Whatsapp is ready!" });
+    io.to(`user:${userId}`).emit("ready", { id: id });
+    io.to(`user:${userId}`).emit("message", { id: id, text: "Whatsapp is ready!" });
 
     // Get phone number
     const phoneNumber = client.info.me.user;
@@ -133,12 +133,12 @@ const createSession = async function (id, description, io) {
   });
 
   client.on("authenticated", () => {
-    io.emit("authenticated", { id: id });
-    io.emit("message", { id: id, text: "Whatsapp is authenticated!" });
+    io.to(`user:${userId}`).emit("authenticated", { id: id });
+    io.to(`user:${userId}`).emit("message", { id: id, text: "Whatsapp is authenticated!" });
   });
 
   client.on("auth_failure", function () {
-    io.emit("message", { id: id, text: "Auth failure, restarting..." });
+    io.to(`user:${userId}`).emit("message", { id: id, text: "Auth failure, restarting..." });
 
     if (device) {
       device.update({ status: "disconnected", ready: false });
@@ -147,7 +147,7 @@ const createSession = async function (id, description, io) {
 
   client.on("disconnected", async (reason) => {
     delete qrs[id]; // Clear QR on disconnect
-    io.emit("message", { id: id, text: "Whatsapp is disconnected!" });
+    io.to(`user:${userId}`).emit("message", { id: id, text: "Whatsapp is disconnected!" });
     client.destroy();
     client.initialize();
 
@@ -167,7 +167,7 @@ const createSession = async function (id, description, io) {
       });
     }
 
-    io.emit("remove-session", id);
+    io.to(`user:${userId}`).emit("remove-session", id);
   });
 
   client.on("message", async (msg) => {
@@ -216,70 +216,45 @@ const createSession = async function (id, description, io) {
 };
 
 const init = async function (socket, io) {
-  // Try to sync with database for device sessions
   try {
-    // Only get devices that have a valid userId
-    const dbDevices = await Device.findAll({
-      where: {
-        userId: {
-          [require("sequelize").Op.ne]: null,
-        },
-      },
-    });
+    const userId = socket?.user?.id;
 
-    if (dbDevices.length > 0) {
-      if (socket) {
-        const sessionData = dbDevices.map((d) => ({
-          id: d.id,
-          description: d.description,
-          ready: d.ready,
-        }));
-        socket.emit("init", sessionData);
+    // If socket is provided, only initialize for that specific user
+    if (socket && userId) {
+      const dbDevices = await Device.findAll({
+        where: { userId },
+      });
 
-        // Send pending QRs if any
-        dbDevices.forEach(d => {
-          if (qrs[d.id]) {
-            socket.emit("qr", { id: d.id, src: qrs[d.id] });
-          }
-        });
-      } else {
-        dbDevices.forEach((sess) => {
-          createSession(sess.id, sess.description, io);
-        });
-      }
-    } else {
-      // Fallback to JSON file
-      const savedSessions = getSessionsFile();
-      if (savedSessions.length > 0) {
-        if (socket) {
-          savedSessions.forEach((e, i, arr) => {
-            arr[i].ready = false;
-          });
-          socket.emit("init", savedSessions);
-        } else {
-          savedSessions.forEach((sess) => {
-            createSession(sess.id, sess.description, io);
-          });
+      const sessionData = dbDevices.map((d) => ({
+        id: d.id,
+        description: d.description,
+        ready: d.ready,
+      }));
+      socket.emit("init", sessionData);
+
+      // Send pending QRs if any
+      dbDevices.forEach(d => {
+        if (qrs[d.id]) {
+          socket.emit("qr", { id: d.id, src: qrs[d.id] });
         }
-      }
+      });
+      return;
+    }
+
+    // If no socket (system startup), initialize all sessions
+    if (!socket) {
+      const dbDevices = await Device.findAll({
+        where: {
+          userId: { [require("sequelize").Op.ne]: null }
+        }
+      });
+      
+      dbDevices.forEach((sess) => {
+        createSession(sess.id, sess.description, io);
+      });
     }
   } catch (error) {
-    console.error("Error loading sessions from database:", error);
-
-    // Fallback to JSON file
-    const savedSessions = getSessionsFile();
-    if (savedSessions.length > 0) {
-      if (socket) {
-        savedSessions.forEach((e, i, arr) => {
-          arr[i].ready = false;
-        });
-        socket.emit("init", savedSessions);
-      } else {
-        savedSessions.forEach((sess) => {
-          createSession(sess.id, sess.description, io);
-        });
-      }
-    }
+    console.error("Error loading sessions:", error);
   }
 };
 

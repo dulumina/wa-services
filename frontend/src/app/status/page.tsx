@@ -41,7 +41,10 @@ export default function StatusPage() {
 
     // 2. Socket Connection
     const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:8000";
-    const socket = io(socketUrl);
+    const token = localStorage.getItem("wa_token");
+    const socket = io(socketUrl, {
+      auth: { token }
+    });
 
     socket.on("connect", () => {
       setIsConnected(true);

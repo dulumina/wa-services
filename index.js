@@ -118,11 +118,53 @@ const startApp = async () => {
 };
 
 // Socket IO configuration
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token || socket.handshake.headers['authorization']?.split(' ')[1];
+  
+  if (!token) {
+    return next(new Error("Authentication error: Token missing"));
+  }
+
+  const jwt = require("jsonwebtoken");
+  const secret = process.env.JWT_SECRET;
+  
+  if (!secret) {
+    return next(new Error("Authentication error: JWT_SECRET not configured"));
+  }
+
+  jwt.verify(token, secret, (err, decoded) => {
+    if (err) return next(new Error("Authentication error: Invalid token"));
+    socket.user = { id: decoded.userId };
+    next();
+  });
+});
+
 io.on("connection", function (socket) {
+  const userId = socket.user.id;
+  console.log(`Socket connected: ${socket.id} (User: ${userId})`);
+  
+  // Join a room for this user
+  socket.join(`user:${userId}`);
+
   whatsappService.init(socket, io);
 
-  socket.on("create-session", function (data) {
-    whatsappService.createSession(data.id, data.description, io);
+  socket.on("create-session", async function (data) {
+    try {
+      const { Device } = require("./models");
+      const device = await Device.findOne({
+        where: { id: data.id, userId: userId }
+      });
+
+      if (!device) {
+        console.warn(`User ${userId} attempted to create session for unauthorized device ${data.id}`);
+        socket.emit("message", { id: data.id, text: "Unauthorized: You do not own this device." });
+        return;
+      }
+
+      whatsappService.createSession(data.id, data.description, io);
+    } catch (err) {
+      console.error("Error in create-session socket handler:", err);
+    }
   });
 });
 
