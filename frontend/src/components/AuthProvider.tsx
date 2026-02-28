@@ -3,6 +3,7 @@
 import React, { ReactNode, useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { validateToken, getToken, clearAuth } from "@/lib/auth";
+import { AuthContext } from "@/lib/authContext";
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -81,5 +82,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     );
   }
 
-  return <>{children}</>;
+  return (
+    <AuthContext.Provider value={{ isLoading, isAuthenticated }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }

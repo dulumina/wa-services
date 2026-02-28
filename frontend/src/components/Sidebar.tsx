@@ -5,21 +5,22 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LayoutDashboard, Smartphone, Key, Activity, Settings, LogOut, FileText } from "lucide-react";
 import { getToken, clearAuth } from "@/lib/auth";
+import { useAuth } from "@/lib/authContext";
 
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { isAuthenticated } = useAuth();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    const token = getToken();
-    setIsAuthenticated(!!token);
   }, []);
 
-  if (!mounted || pathname === "/login" || pathname === "/register" || !isAuthenticated) return null;
+  // Only render sidebar if mounted and authenticated
+  if (!mounted || pathname === "/login" || pathname === "/register" || !isAuthenticated) {
+    return null;
+  }
 
   const handleLogout = () => {
     clearAuth();
