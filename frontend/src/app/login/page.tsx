@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Activity, Lock, User, AlertCircle, ArrowRight } from "lucide-react";
+import { setToken, setUser } from "@/lib/auth";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -27,8 +28,8 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
-        localStorage.setItem("wa_token", data.data.token);
-        localStorage.setItem("wa_user", JSON.stringify(data.data.user));
+        setToken(data.data.token);
+        setUser(data.data.user);
         router.push("/");
       } else {
         setError(data.message || "Invalid credentials");

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LayoutDashboard, Smartphone, Key, Activity, Settings, LogOut, FileText } from "lucide-react";
+import { getToken, clearAuth } from "@/lib/auth";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -14,15 +15,14 @@ export function Sidebar() {
 
   useEffect(() => {
     setMounted(true);
-    const token = localStorage.getItem("wa_token");
+    const token = getToken();
     setIsAuthenticated(!!token);
   }, []);
 
   if (!mounted || pathname === "/login" || pathname === "/register" || !isAuthenticated) return null;
 
   const handleLogout = () => {
-    localStorage.removeItem("wa_token");
-    localStorage.removeItem("wa_user");
+    clearAuth();
     router.push("/login");
   };
 

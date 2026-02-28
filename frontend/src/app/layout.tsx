@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/Sidebar";
 import { MainWrapper } from "@/components/MainWrapper";
+import { AuthProvider } from "@/components/AuthProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,12 +33,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${geistSans.variable} ${geistMono.variable}`}>
-        <div className="dashboard-layout">
-          <Sidebar />
-          <MainWrapper>
-            {children}
-          </MainWrapper>
-        </div>
+        <AuthProvider>
+          <div className="dashboard-layout">
+            <Sidebar />
+            <MainWrapper>
+              {children}
+            </MainWrapper>
+          </div>
+        </AuthProvider>
       </body>
     </html>
   );
