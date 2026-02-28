@@ -27,6 +27,18 @@ export function Sidebar() {
     router.push("/login");
   };
 
+  const handleNavClick = () => {
+    // Close sidebar on mobile when nav item is clicked
+    const layout = document.querySelector(".dashboard-layout");
+    const sidebar = document.querySelector(".sidebar");
+    if (layout?.classList.contains("sidebar-open")) {
+      layout.classList.remove("sidebar-open");
+    }
+    if (sidebar?.classList.contains("open")) {
+      sidebar.classList.remove("open");
+    }
+  };
+
   const navItems = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
     { name: "Devices", href: "/devices", icon: Smartphone },
@@ -54,6 +66,7 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={`nav-item ${isActive ? "active" : ""}`}
+              onClick={handleNavClick}
             >
               <Icon size={20} />
               <span>{item.name}</span>
@@ -63,7 +76,14 @@ export function Sidebar() {
       </nav>
 
       <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid var(--glass-border)' }}>
-        <button className="nav-item" onClick={handleLogout} style={{ width: '100%', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}>
+        <button
+          className="nav-item"
+          onClick={() => {
+            handleNavClick();
+            handleLogout();
+          }}
+          style={{ width: '100%', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}
+        >
           <LogOut size={20} />
           <span>Logout</span>
         </button>

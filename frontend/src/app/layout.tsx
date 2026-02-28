@@ -4,6 +4,7 @@ import "./globals.css";
 import { Sidebar } from "@/components/Sidebar";
 import { MainWrapper } from "@/components/MainWrapper";
 import { AuthProvider } from "@/components/AuthProvider";
+import { MobileNavToggle } from "@/components/MobileNavToggle";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,6 +35,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.variable} ${geistSans.variable} ${geistMono.variable}`}>
         <AuthProvider>
+          <MobileNavToggle />
           <div className="dashboard-layout">
             <Sidebar />
             <MainWrapper>
